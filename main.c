@@ -1,20 +1,19 @@
 #include <stdio.h>
 #include "procesos.h"
+#include "algoritmos.h"
 
 #define MAX_PROCESOS 100
 
 int main() {
     Proceso procesos[MAX_PROCESOS];
-    int cantidad = cargarProcesos("procesos.txt", procesos, MAX_PROCESOS);
+    int cantidad = leerProcesos("procesos.txt", procesos, MAX_PROCESOS);
 
     if (cantidad == 0) {
-        printf("No se cargaron procesos.\n");
+        printf("No se pudieron leer procesos.\n");
         return 1;
     }
 
-    printf("Procesos cargados:\n");
-    imprimirProcesos(procesos, cantidad);
+    fifo(procesos, cantidad);
 
-    // Aquí podrías llamar al algoritmo de calendarización (por ejemplo, FIFO)
     return 0;
 }

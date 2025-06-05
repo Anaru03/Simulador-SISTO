@@ -1,19 +1,19 @@
 #ifndef PROCESOS_H
 #define PROCESOS_H
 
+#define MAX_PID_LEN 10
+
 typedef struct {
-    char pid[10];
-    int burst_time;
-    int arrival_time;
-    int priority;
-    int remaining_time;
-    int start_time;
-    int finish_time;
-    int waiting_time;
-    int turnaround_time;
+    char pid[MAX_PID_LEN]; 
+    int duracion;          
+    int llegada;           
+    int prioridad;         
+    int inicio;
+    int fin;
+    int espera;
+    int retorno;
 } Proceso;
 
-int cargarProcesos(const char *filename, Proceso procesos[], int maxProcesos);
-void imprimirProcesos(Proceso procesos[], int cantidad);
+int leerProcesos(const char* filename, Proceso* procesos, int max);
 
 #endif
