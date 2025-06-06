@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "procesos.h"
 #include "algoritmos.h"
+#include "gantt.h"
 
 #define MAX_PROCESOS 100
 
@@ -13,7 +14,11 @@ int main() {
         return 1;
     }
 
+    // Ejecutar algoritmo FIFO
     fifo(procesos, cantidad);
+
+    // Mostrar diagrama de Gantt
+    mostrarGantt(procesos, cantidad);
 
     return 0;
 }
