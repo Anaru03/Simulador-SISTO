@@ -60,11 +60,18 @@ void mostrarGantt(Proceso* procesos, int cantidad) {
                 if (t > ciclo) {
                     printf("    ");
                 } else {
-                    EstadoProceso estado = obtenerEstado(procesos[i], t);
-                    if (estado == EJECUTANDO) {
-                        printf("%s%-4s\033[0m", colores_estado[estado], procesos[i].pid);
+                    if (t < procesos[i].llegada) {
+                        // Antes de llegada: bloque vacío con color NUEVO (gris)
+                        printf("%s    \033[0m", colores_estado[NUEVO]);
+                    } else if (t >= procesos[i].llegada && t < procesos[i].inicio) {
+                        // Proceso listo para ejecutar (esperando): mostrar PID en azul
+                        printf("%s%-4s\033[0m", colores_estado[LISTO], procesos[i].pid);
+                    } else if (t >= procesos[i].inicio && t < procesos[i].fin) {
+                        // Proceso en ejecución: mostrar PID en verde
+                        printf("%s%-4s\033[0m", colores_estado[EJECUTANDO], procesos[i].pid);
                     } else {
-                        printf("%s    \033[0m", colores_estado[estado]);
+                        // Proceso terminado: mostrar PID en blanco
+                        printf("%s%-4s\033[0m", colores_estado[TERMINADO], procesos[i].pid);
                     }
                 }
             }
