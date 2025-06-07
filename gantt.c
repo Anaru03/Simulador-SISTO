@@ -38,54 +38,62 @@ void mostrarGantt(Proceso* procesos, int cantidad) {
             tiempoTotal = procesos[i].fin;
     }
 
-    for (int ciclo = 0; ciclo <= tiempoTotal; ciclo++) {
-        system(LIMPIAR);
-        printf("Ciclo: %d\n", ciclo);
-        printf("       ");
-
-        // Encabezado de ciclos
-        for (int t = 0; t <= tiempoTotal; t++) {
-            printf("%4d", t);
-        }
-        printf("\n       ");
-        for (int t = 0; t <= tiempoTotal; t++) {
-            printf("----");
-        }
-        printf("\n");
-
-        // Filas por proceso
-        for (int i = 0; i < cantidad; i++) {
-            printf("%-6s|", procesos[i].pid);
-            for (int t = 0; t <= tiempoTotal; t++) {
-                if (t > ciclo) {
-                    printf("    ");
-                } else {
-                    if (t < procesos[i].llegada) {
-                        // Antes de llegada: bloque vacío con color NUEVO (gris)
-                        printf("%s    \033[0m", colores_estado[NUEVO]);
-                    } else if (t >= procesos[i].llegada && t < procesos[i].inicio) {
-                        // Proceso listo para ejecutar (esperando): mostrar PID en azul
-                        printf("%s%-4s\033[0m", colores_estado[LISTO], procesos[i].pid);
-                    } else if (t >= procesos[i].inicio && t < procesos[i].fin) {
-                        // Proceso en ejecución: mostrar PID en verde
-                        printf("%s%-4s\033[0m", colores_estado[EJECUTANDO], procesos[i].pid);
-                    } else {
-                        // Proceso terminado: mostrar PID en blanco
-                        printf("%s%-4s\033[0m", colores_estado[TERMINADO], procesos[i].pid);
-                    }
-                }
-            }
-            printf("\n");
-        }
-
-        // Pausa entre ciclos
-        PAUSA(500); // 500 ms
+    // Matriz para saber qué celdas ya mostrar
+    int **mostrar = malloc(cantidad * sizeof(int*));
+    for (int i = 0; i < cantidad; i++) {
+        mostrar[i] = calloc(tiempoTotal + 1, sizeof(int));
     }
 
-    // Leyenda final
+    // Recorremos cada ciclo y proceso (celda por celda verticalmente)
+    for (int t = 0; t <= tiempoTotal; t++) {
+        for (int i = 0; i < cantidad; i++) {
+            mostrar[i][t] = 1;
+
+            system(LIMPIAR);
+            printf("Ciclo: %d - Proceso: %s\n\n", t, procesos[i].pid);
+
+            // Encabezado horizontal (tiempos)
+            printf("       ");
+            for (int h = 0; h <= tiempoTotal; h++) {
+                printf("%4d", h);
+            }
+            printf("\n       ");
+            for (int h = 0; h <= tiempoTotal; h++) {
+                printf("----");
+            }
+            printf("\n");
+
+            // Mostrar tabla de estados hasta la celda actual
+            for (int p = 0; p < cantidad; p++) {
+                printf("%-6s|", procesos[p].pid);
+                for (int c = 0; c <= tiempoTotal; c++) {
+                    if (mostrar[p][c]) {
+                        EstadoProceso est = obtenerEstado(procesos[p], c);
+                        if (est == NUEVO) {
+                            printf("%s    \033[0m", colores_estado[NUEVO]);
+                        } else {
+                            printf("%s%-4s\033[0m", colores_estado[est], procesos[p].pid);
+                        }
+                    } else {
+                        printf("    ");
+                    }
+                }
+                printf("\n");
+            }
+            PAUSA(300);
+        }
+    }
+
+    // Mostrar leyenda (sin limpiar ni pedir Enter)
     printf("\nLeyenda de estados:\n");
     printf("\033[100m NUEVO \033[0m     ");
     printf("\033[44m LISTO \033[0m     ");
-    printf("\033[42m EJECUTANDO (con nombre) \033[0m     ");
+    printf("\033[42m EJECUTANDO \033[0m     ");
     printf("\033[47m TERMINADO \033[0m\n");
+
+    // Liberar memoria
+    for (int i = 0; i < cantidad; i++) {
+        free(mostrar[i]);
+    }
+    free(mostrar);
 }
