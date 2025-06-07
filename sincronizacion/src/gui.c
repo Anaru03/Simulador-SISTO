@@ -16,7 +16,7 @@ static GtkWidget *combo_sync_type;
 static GtkWidget *button_load_processes, *button_load_resources, *button_load_actions;
 static GtkWidget *button_start_simulation, *button_reset;
 static GtkWidget *label_cycle;
-// static GtkWidget *scrolled_timeline;  // No usado, comentado
+static GtkWidget *scrolled_timeline;
 static GtkWidget *drawing_area;
 
 static Process *processes = NULL;
@@ -90,36 +90,31 @@ static void load_actions_cb(GtkButton *button, gpointer user_data) {
         }
         update_textview(textview_actions, buffer);
 
-        // Calcular ciclo máximo para timeline
         max_cycle = 0;
         for (int i = 0; i < action_count; i++) {
             if (actions[i].cycle > max_cycle)
                 max_cycle = actions[i].cycle;
         }
+
+        int width_needed = (max_cycle + 2) * 40;
+        int height_needed = action_count * 30 + 50;
+        gtk_widget_set_size_request(drawing_area, width_needed, height_needed);
+        gtk_widget_queue_draw(drawing_area);
     }
 }
 
 static void draw_timeline_cb(GtkWidget *widget, cairo_t *cr, gpointer user_data) {
     UNUSED(widget);
-    if (!actions || action_count == 0) return;
-
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(widget, &allocation);
-    int width = allocation.width;
-    int height = allocation.height;
-    UNUSED(width);
-    UNUSED(height);
     UNUSED(user_data);
+    if (!actions || action_count == 0) return;
 
     int block_width = 30;
     int block_height = 20;
     int margin = 5;
 
-    // Fondo blanco
     cairo_set_source_rgb(cr, 1, 1, 1);
     cairo_paint(cr);
 
-    // Dibujar ciclo actual en top
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
     cairo_set_font_size(cr, 14);
@@ -128,7 +123,6 @@ static void draw_timeline_cb(GtkWidget *widget, cairo_t *cr, gpointer user_data)
     cairo_move_to(cr, margin, 20);
     cairo_show_text(cr, cycle_str);
 
-    // Dibujar timeline horizontal (cada bloque = acción)
     int x_start = margin;
     int y_start = 40;
 
@@ -137,17 +131,15 @@ static void draw_timeline_cb(GtkWidget *widget, cairo_t *cr, gpointer user_data)
             int x = x_start + actions[i].cycle * (block_width + margin);
             int y = y_start + i * (block_height + margin);
 
-            // Color: verde si acceso exitoso, rojo si espera
             if (actions[i].accessed == 1) {
-                cairo_set_source_rgb(cr, 0, 0.7, 0); // verde
+                cairo_set_source_rgb(cr, 0, 0.7, 0);
             } else {
-                cairo_set_source_rgb(cr, 0.8, 0, 0); // rojo
+                cairo_set_source_rgb(cr, 0.8, 0, 0);
             }
 
             cairo_rectangle(cr, x, y, block_width, block_height);
             cairo_fill(cr);
 
-            // Texto acción
             cairo_set_source_rgb(cr, 1, 1, 1);
             const char *act_str = (actions[i].action == ACTION_READ) ? "R" : "W";
             cairo_move_to(cr, x + 5, y + 15);
@@ -167,7 +159,7 @@ static gboolean tick_cb(gpointer user_data) {
     current_cycle++;
     if (current_cycle > max_cycle) {
         running = FALSE;
-        return FALSE; // Parar timeout
+        return FALSE;
     }
 
     char cycle_label[20];
@@ -184,13 +176,8 @@ static void start_simulation_cb(GtkButton *button, gpointer user_data) {
     current_cycle = 0;
     reset_sync();
 
-    // Leer tipo de sincronización
     const gchar *sync_str = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(combo_sync_type));
-    if (sync_str && strcmp(sync_str, "Mutex") == 0) {
-        current_sync_type = SYNC_MUTEX;
-    } else {
-        current_sync_type = SYNC_SEMAPHORE;
-    }
+    current_sync_type = (sync_str && strcmp(sync_str, "Mutex") == 0) ? SYNC_MUTEX : SYNC_SEMAPHORE;
     init_sync(current_sync_type, resources, resource_count);
 
     running = TRUE;
@@ -212,14 +199,13 @@ void start_gui(int argc, char **argv) {
     gtk_init(&argc, &argv);
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "Simulador de Sincronización");
+    gtk_window_set_title(GTK_WINDOW(window), "Simulador de Sincronizaci\u00f3n");
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
     GtkWidget *vbox_main = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_add(GTK_CONTAINER(window), vbox_main);
 
-    // Carga procesos y recursos
     GtkWidget *hbox_top = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start(GTK_BOX(vbox_main), hbox_top, FALSE, FALSE, 5);
 
@@ -241,7 +227,7 @@ void start_gui(int argc, char **argv) {
     gtk_combo_box_set_active(GTK_COMBO_BOX(combo_sync_type), 0);
     gtk_box_pack_start(GTK_BOX(hbox_top), combo_sync_type, FALSE, FALSE, 5);
 
-    button_start_simulation = gtk_button_new_with_label("Iniciar Simulación");
+    button_start_simulation = gtk_button_new_with_label("Iniciar Simulaci\u00f3n");
     g_signal_connect(button_start_simulation, "clicked", G_CALLBACK(start_simulation_cb), NULL);
     gtk_box_pack_start(GTK_BOX(hbox_top), button_start_simulation, FALSE, FALSE, 5);
 
@@ -252,33 +238,38 @@ void start_gui(int argc, char **argv) {
     label_cycle = gtk_label_new("Cycle: 0");
     gtk_box_pack_start(GTK_BOX(hbox_top), label_cycle, FALSE, FALSE, 5);
 
-    // TextViews
     GtkWidget *hbox_textviews = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start(GTK_BOX(vbox_main), hbox_textviews, TRUE, TRUE, 5);
 
+    GtkWidget *scrolled_processes = gtk_scrolled_window_new(NULL, NULL);
     textview_processes = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(textview_processes), FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox_textviews), gtk_scrolled_window_new(NULL, NULL), TRUE, TRUE, 5);
-    GtkWidget *scrolled_processes = gtk_scrolled_window_new(NULL, NULL);
     gtk_container_add(GTK_CONTAINER(scrolled_processes), textview_processes);
     gtk_box_pack_start(GTK_BOX(hbox_textviews), scrolled_processes, TRUE, TRUE, 5);
 
+    GtkWidget *scrolled_resources = gtk_scrolled_window_new(NULL, NULL);
     textview_resources = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(textview_resources), FALSE);
-    GtkWidget *scrolled_resources = gtk_scrolled_window_new(NULL, NULL);
     gtk_container_add(GTK_CONTAINER(scrolled_resources), textview_resources);
     gtk_box_pack_start(GTK_BOX(hbox_textviews), scrolled_resources, TRUE, TRUE, 5);
 
+    GtkWidget *scrolled_actions = gtk_scrolled_window_new(NULL, NULL);
     textview_actions = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(textview_actions), FALSE);
-    GtkWidget *scrolled_actions = gtk_scrolled_window_new(NULL, NULL);
     gtk_container_add(GTK_CONTAINER(scrolled_actions), textview_actions);
     gtk_box_pack_start(GTK_BOX(hbox_textviews), scrolled_actions, TRUE, TRUE, 5);
 
-    // Área de dibujo timeline
+    scrolled_timeline = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_timeline),
+                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+    gtk_widget_set_hexpand(scrolled_timeline, TRUE);
+    gtk_widget_set_vexpand(scrolled_timeline, TRUE);
+    gtk_box_pack_start(GTK_BOX(vbox_main), scrolled_timeline, TRUE, TRUE, 5);
+
     drawing_area = gtk_drawing_area_new();
-    gtk_widget_set_size_request(drawing_area, 780, 200);
-    gtk_box_pack_start(GTK_BOX(vbox_main), drawing_area, FALSE, FALSE, 5);
+    gtk_widget_set_hexpand(drawing_area, TRUE);
+    gtk_widget_set_vexpand(drawing_area, TRUE);
+    gtk_container_add(GTK_CONTAINER(scrolled_timeline), drawing_area);
     g_signal_connect(G_OBJECT(drawing_area), "draw", G_CALLBACK(draw_timeline_cb), NULL);
 
     gtk_widget_show_all(window);
