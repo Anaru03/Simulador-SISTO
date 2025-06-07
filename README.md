@@ -1,38 +1,44 @@
-# Simulador de Calendarización y Sincronización
+Sincronización de Procesos en C (GTK)
 
-## Universidad del Valle de Guatemala  
-**Curso:** Sistemas Operativos – Sección 30  
-**Docente:** Juan Carlos Canteo Boix  
-**Integrantes:**  
-- Ruth de León - [Anaru03](https://github.com/Anaru03) 
-- Isabella Miralles - [Isabella-22293](https://github.com/Isabella-22293) 
-- Año de creación: marzo 2025
-
+Este proyecto simula algoritmos de planificación y mecanismos de sincronización (mutex y semáforos) utilizando una interfaz gráfica en C con GTK. Fue desarrollado como parte del curso de *Sistemas Operativos*.
 
 ---
 
-## Descripción General
+## 📦 Estructura del Proyecto
 
-Este proyecto implementa un simulador visual y funcional de algoritmos de planificación de procesos y mecanismos de sincronización, utilizando el lenguaje C o C++. Está dividido en dos partes principales:
-
-1. Simulación de algoritmos de calendarización.
-2. Simulación de mecanismos de sincronización (mutex y semáforos).
-
-El objetivo es reforzar los conceptos fundamentales de sistemas operativos, incluyendo scheduling, concurrencia y sincronización de procesos.
+- main.c – Archivo principal de entrada.
+- gui.c / gui.h – Interfaz gráfica con GTK.
+- loader.c / loader.h – Carga y parseo de archivos .txt.
+- simulation.c / simulation.h – Núcleo de simulación (planificación/sincronización).
+- process.c / process.h – Lógica de procesos.
+- action.c / action.h – Lógica de acciones sobre recursos.
+- sync.c / sync.h – Manejo de mutex y semáforos.
+- resources.c / resources.h – Lógica de recursos disponibles.
+- assets/ – Archivos .txt de entrada.
+- Makefile – Compilación rápida.
 
 ---
 
-## Funcionalidades Principales
+## 🛠️ Requisitos
 
-### A. Simulación de Calendarización
-- Algoritmos soportados: FIFO, SJF, SRT, Round Robin (quantum configurable), Priority (con envejecimiento).
-- Carga dinámica de procesos desde archivo de texto.
-- Visualización dinámica del diagrama de Gantt con scroll horizontal.
-- Identificación por nombre y color de procesos.
-- Cálculo y despliegue de métricas como tiempo promedio de espera y tiempo promedio de finalización.
+- *Sistema operativo:* Linux o WSL.
+- *Compilador:* gcc
+- *GTK 3:* Instálalo con:
 
-### B. Simulación de Sincronización
-- Mecanismos soportados: Mutex y Semáforos.
-- Carga dinámica de procesos, recursos y acciones desde archivos de texto.
-- Visualización dinámica de acciones sobre recursos con identificación de estados (`ACCESSED`, `WAITING`).
-- Línea de tiempo con scroll horizontal y diferenciación visual entre accesos exitosos y bloqueos.
+```bash
+sudo apt install libgtk-3-dev
+
+```
+
+---
+
+## Compilar
+```bash
+Make
+```
+---
+
+## Ejecutar
+
+```bash
+./programa
