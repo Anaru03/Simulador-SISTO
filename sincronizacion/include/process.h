@@ -1,16 +1,21 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#define MAX_PROCESSES 100
+#include "action.h"  // se queda aquí, correcto
 
 typedef struct {
-    char pid[10];
-    int bt;
-    int at;
+    char pid[20];
+    int burst_time;
+    int arrival_time;      // <--- agregado
+    int remaining_time;
     int priority;
+    int current_state;
 } Process;
 
-int load_processes(const char *filename);
-Process* get_processes(int *count);
+typedef struct ProcessNode {
+    Process process;
+    Action* actions;
+    struct ProcessNode* next;
+} ProcessNode;
 
 #endif

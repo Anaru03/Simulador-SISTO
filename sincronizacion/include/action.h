@@ -1,23 +1,18 @@
 #ifndef ACTION_H
 #define ACTION_H
 
-#define MAX_ACTIONS 200
-
 typedef enum {
-    ACTION_READ,
-    ACTION_WRITE,
-    ACTION_UNKNOWN
+    READ,
+    WRITE,
+    RELEASE
 } ActionType;
 
-typedef struct {
-    char pid[10];
-    ActionType action;
-    char resource[20];
+typedef struct Action {
+    char pid[20];          // para identificar qué proceso ejecuta esta acción
+    ActionType type;
+    char resource[32];
     int cycle;
-    int accessed; // 1 = acceso exitoso, 0 = espera
+    struct Action* next;    // para lista enlazada
 } Action;
-
-int load_actions(const char *filename);
-Action* get_actions(int *count);
 
 #endif

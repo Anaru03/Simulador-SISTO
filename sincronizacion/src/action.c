@@ -1,43 +1,58 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include "action.h"
 
-static Action actions[MAX_ACTIONS];
-static int action_count = 0;
+Action* load_actions(const char *filename, int *count) {
+    FILE *file = fopen(filename, "r");
+    if (!file) return NULL;
 
-static ActionType parse_action_type(const char *str) {
-    if (strcasecmp(str, "READ") == 0) return ACTION_READ;
-    if (strcasecmp(str, "WRITE") == 0) return ACTION_WRITE;
-    return ACTION_UNKNOWN;
-}
+    Action *head = NULL;
+    Action *tail = NULL;
+    *count = 0;
 
-int load_actions(const char *filename) {
-    FILE *f = fopen(filename, "r");
-    if (!f) {
-        perror("Error abriendo acciones.txt");
-        return -1;
-    }
-    action_count = 0;
-    char line[150];
-    while (fgets(line, sizeof(line), f)) {
-        if (action_count >= MAX_ACTIONS) break;
-        char pid[10], action_str[10], resource[20];
-        int cycle;
-        if (sscanf(line, "%[^,], %[^,], %[^,], %d", pid, action_str, resource, &cycle) == 4) {
-            strcpy(actions[action_count].pid, pid);
-            actions[action_count].action = parse_action_type(action_str);
-            strcpy(actions[action_count].resource, resource);
-            actions[action_count].cycle = cycle;
-            actions[action_count].accessed = 0; // Inicialmente en espera
-            action_count++;
+    char line[128];
+    while (fgets(line, sizeof(line), file)) {
+        Action *a = malloc(sizeof(Action));
+        if (!a) break;
+
+        char type_str[16];
+        // Formato esperado: PID TYPE RESOURCE CYCLE
+        if (sscanf(line, "%19s %15s %31s %d", a->pid, type_str, a->resource, &a->cycle) != 4) {
+            free(a);
+            continue;
         }
+
+        // Convierte string a enum
+        if (strcmp(type_str, "READ") == 0) a->type = READ;
+        else if (strcmp(type_str, "WRITE") == 0) a->type = WRITE;
+        else if (strcmp(type_str, "RELEASE") == 0) a->type = RELEASE;
+        else {
+            free(a);
+            continue;
+        }
+
+        a->next = NULL;
+
+        if (!head) {
+            head = tail = a;
+        } else {
+            tail->next = a;
+            tail = a;
+        }
+
+        (*count)++;
     }
-    fclose(f);
-    return 0;
+
+    fclose(file);
+    return head;
 }
 
-Action* get_actions(int *count) {
-    *count = action_count;
-    return actions;
+void free_actions(Action *head) {
+    Action *tmp;
+    while (head) {
+        tmp = head;
+        head = head->next;
+        free(tmp);
+    }
 }
